@@ -117,7 +117,8 @@ interface AIAgentState {
   fetchTemplates: () => Promise<void>
 }
 
-export const useAIAgentStore = create<AIAgentState>()(n  persist(
+export const useAIAgentStore = create<AIAgentState>()(
+  persist(
     (set, get) => ({
       agents: [],
       conversations: [],

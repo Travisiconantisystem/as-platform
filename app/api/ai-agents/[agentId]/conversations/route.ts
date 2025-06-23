@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { v4 as uuidv4 } from 'uuid'
+
 
 // GET 請求 - 獲取智能體的對話列表
 export async function GET(
@@ -50,20 +50,17 @@ export async function GET(
       `)
       .eq('agent_id', agentId)
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false })
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
     
     if (error) {
       console.error('獲取對話列表錯誤:', error)
-      return NextResponse.json({ error: '獲取對話列表失敗' }, { status: 500 })
+      return NextResponse.json(
+        { error: '獲取對話列表失敗' },
+        { status: 500 }
+      )
     }
-    
-    // 獲取總數
-    const { count } = await supabase
-      .from('ai_conversations')
-      .select('*', { count: 'exact', head: true })
-      .eq('agent_id', agentId)
-      .eq('user_id', userId)
     
     return NextResponse.json({
       conversations: conversations || [],
@@ -71,17 +68,15 @@ export async function GET(
         id: agent.id,
         name: agent.name
       },
-      pagination: {
-        total: count || 0,
-        limit,
-        offset,
-        hasMore: (count || 0) > offset + limit
-      }
+      hasMore: conversations?.length === limit
     })
     
   } catch (error) {
     console.error('獲取對話列表錯誤:', error)
-    return NextResponse.json({ error: '服務器內部錯誤' }, { status: 500 })
+    return NextResponse.json(
+      { error: '服務器內部錯誤' },
+      { status: 500 }
+    )
   }
 }
 
@@ -107,7 +102,7 @@ export async function POST(
     // 檢查智能體是否存在且可用
     const { data: agent, error: agentError } = await supabase
       .from('ai_agents')
-      .select('id, name, status')
+      .select('*')
       .eq('id', agentId)
       .eq('user_id', userId)
       .single()
@@ -124,55 +119,130 @@ export async function POST(
     }
     
     // 創建新對話
-    const conversationId = uuidv4()
-    const now = new Date().toISOString()
+    const conversationData = {
+      agent_id: agentId,
+      user_id: userId,
+      title: title || (initialMessage ? initialMessage.substring(0, 50) + (initialMessage.length > 50 ? '...' : '') : '新對話'),
+      status: 'active',
+      message_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
     
-    const { data: conversation, error: conversationError } = await supabase
+    const { data: conversation, error: createError } = await supabase
       .from('ai_conversations')
-      .insert({
-        id: conversationId,
-        agent_id: agentId,
-        user_id: userId,
-        title: title || `與 ${agent.name} 的對話`,
-        message_count: initialMessage ? 1 : 0,
-        last_message_at: initialMessage ? now : null,
-        status: 'active',
-        created_at: now,
-        updated_at: now
-      })
+      .insert(conversationData)
       .select()
       .single()
     
-    if (conversationError) {
-      console.error('創建對話錯誤:', conversationError)
-      return NextResponse.json({ error: '創建對話失敗' }, { status: 500 })
+    if (createError) {
+      console.error('創建對話錯誤:', createError)
+      return NextResponse.json(
+        { error: '創建對話失敗' },
+        { status: 500 }
+      )
     }
     
-    // 如果有初始消息，添加到對話中
+    // 如果有初始消息，保存它
     if (initialMessage) {
       const { error: messageError } = await supabase
         .from('ai_messages')
         .insert({
-          id: uuidv4(),
-          conversation_id: conversationId,
+          conversation_id: conversation.id,
           role: 'user',
           content: initialMessage,
-          created_at: now
+          created_at: new Date().toISOString()
         })
       
       if (messageError) {
-        console.error('添加初始消息錯誤:', messageError)
+        console.error('保存初始消息錯誤:', messageError)
+        // 不返回錯誤，因為對話已經創建成功
+      } else {
+        // 更新對話的消息計數
+        await supabase
+          .from('ai_conversations')
+          .update({
+            message_count: 1,
+            last_message_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', conversation.id)
       }
     }
     
     return NextResponse.json({
       success: true,
-      conversation: conversation,
-      message: '對話創建成功'
+      conversation: {
+        id: conversation.id,
+        title: conversation.title,
+        status: conversation.status,
+        created_at: conversation.created_at
+      }
     })
     
   } catch (error) {
     console.error('創建對話錯誤:', error)
-    return NextResponse.json({ error: '服務器內部錯誤' }, { status: 500 })
+    return NextResponse.json(
+      { error: '服務器內部錯誤' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE 請求 - 刪除對話
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { agentId: string } }
+) {
+  try {
+    const { agentId } = params
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+    const conversationId = searchParams.get('conversationId')
+    
+    if (!userId || !conversationId) {
+      return NextResponse.json(
+        { error: '缺少必要參數' },
+        { status: 400 }
+      )
+    }
+    
+    const supabase = createRouteHandlerClient({ cookies })
+    
+    // 檢查對話是否存在且屬於該用戶和智能體
+    const { data: conversation, error: convError } = await supabase
+      .from('ai_conversations')
+      .select('id')
+      .eq('id', conversationId)
+      .eq('agent_id', agentId)
+      .eq('user_id', userId)
+      .single()
+    
+    if (convError || !conversation) {
+      return NextResponse.json({ error: '對話不存在' }, { status: 404 })
+    }
+    
+    // 刪除對話（級聯刪除相關消息）
+    const { error: deleteError } = await supabase
+      .from('ai_conversations')
+      .delete()
+      .eq('id', conversationId)
+    
+    if (deleteError) {
+      console.error('刪除對話錯誤:', deleteError)
+      return NextResponse.json(
+        { error: '刪除對話失敗' },
+        { status: 500 }
+      )
+    }
+    
+    return NextResponse.json({ success: true })
+    
+  } catch (error) {
+    console.error('刪除對話錯誤:', error)
+    return NextResponse.json(
+      { error: '服務器內部錯誤' },
+      { status: 500 }
+    )
   }
 }

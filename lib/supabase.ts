@@ -56,6 +56,9 @@ export const createAdminSupabase = () => {
   });
 };
 
+// 管理員客戶端實例
+export const supabaseAdmin = createAdminSupabase();
+
 // 數據庫表名常數
 export const TABLES = {
   USERS: 'users',

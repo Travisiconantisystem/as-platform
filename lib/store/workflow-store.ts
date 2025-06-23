@@ -72,7 +72,8 @@ interface WorkflowState {
   fetchExecutions: (workflowId?: string) => Promise<void>
 }
 
-export const useWorkflowStore = create<WorkflowState>()(n  persist(
+export const useWorkflowStore = create<WorkflowState>()(
+  persist(
     (set, get) => ({
       workflows: [],
       executions: [],

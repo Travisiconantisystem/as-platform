@@ -221,10 +221,14 @@ export async function POST(request: NextRequest) {
     try {
       await sendToN8NWebhook({
         taskType: 'agent_initialization',
-        agentId: agentId,
-        config: agentData.config,
-        knowledgeBase: knowledgeBase
-      }, userId)
+        workflowId: 'agent_initialization',
+        userId: userId,
+        data: {
+          agentId: agentId,
+          config: agentData.config,
+          knowledgeBase: knowledgeBase
+        }
+      })
     } catch (webhookError) {
       console.error('初始化智能體 Webhook 錯誤:', webhookError)
       // 不阻止智能體創建，但記錄錯誤
@@ -274,9 +278,13 @@ export async function PUT(request: NextRequest) {
       try {
         await sendToN8NWebhook({
           taskType: 'agent_config_update',
-          agentId: id,
-          config: updates.config
-        }, userId)
+          workflowId: 'agent_config_update',
+          userId: userId,
+          data: {
+            agentId: id,
+            config: updates.config
+          }
+        })
       } catch (webhookError) {
         console.error('更新智能體配置 Webhook 錯誤:', webhookError)
       }
@@ -321,8 +329,12 @@ export async function DELETE(request: NextRequest) {
     try {
       await sendToN8NWebhook({
         taskType: 'agent_cleanup',
-        agentId: id
-      }, userId)
+        workflowId: 'agent_cleanup',
+        userId: userId,
+        data: {
+          agentId: id
+        }
+      })
     } catch (webhookError) {
       console.error('清理智能體 Webhook 錯誤:', webhookError)
     }

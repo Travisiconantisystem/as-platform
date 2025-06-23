@@ -7,10 +7,10 @@ import { v4 as uuidv4 } from 'uuid'
 // POST 請求 - 訓練 AI 智能體
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { agentId: string } }
 ) {
   try {
-    const { id } = params
+    const { agentId } = params
     const body = await request.json()
     const { userId, dataset, trainingConfig } = body
     
@@ -27,7 +27,7 @@ export async function POST(
     const { data: agent, error: agentError } = await supabase
       .from('ai_agents')
       .select('*')
-      .eq('id', id)
+      .eq('id', agentId)
       .eq('user_id', userId)
       .single()
     
@@ -48,7 +48,7 @@ export async function POST(
         status: 'training',
         updated_at: new Date().toISOString()
       })
-      .eq('id', id)
+      .eq('id', agentId)
     
     if (updateError) {
       console.error('更新訓練狀態錯誤:', updateError)
@@ -66,7 +66,7 @@ export async function POST(
         user_id: userId,
         task_type: 'agent_training',
         input_data: {
-          agentId: id,
+          agentId: agentId,
           dataset: dataset,
           config: trainingConfig
         },
@@ -83,20 +83,24 @@ export async function POST(
     try {
       const webhookResult = await sendToN8NWebhook({
         taskType: 'agent_training',
-        taskId: trainingTaskId,
-        agentId: id,
-        dataset: dataset,
-        config: {
-          ...agent.config,
-          ...trainingConfig
-        },
-        trainingParams: {
-          epochs: trainingConfig?.epochs || 10,
-          batchSize: trainingConfig?.batchSize || 32,
-          learningRate: trainingConfig?.learningRate || 0.001,
-          validationSplit: trainingConfig?.validationSplit || 0.2
+        workflowId: 'agent_training',
+        userId: userId,
+        data: {
+          taskId: trainingTaskId,
+          agentId: agentId,
+          dataset: dataset,
+          config: {
+            ...agent.config,
+            ...trainingConfig
+          },
+          trainingParams: {
+            epochs: trainingConfig?.epochs || 10,
+            batchSize: trainingConfig?.batchSize || 32,
+            learningRate: trainingConfig?.learningRate || 0.001,
+            validationSplit: trainingConfig?.validationSplit || 0.2
+          }
         }
-      }, userId)
+      })
       
       return NextResponse.json({
         success: true,
@@ -121,10 +125,10 @@ export async function POST(
           status: 'inactive',
           updated_at: new Date().toISOString()
         })
-        .eq('id', id)
+        .eq('id', agentId)
       
       return NextResponse.json(
-        { error: '啟動訓練失敗', details: webhookError.message },
+        { error: '啟動訓練失敗', details: webhookError instanceof Error ? webhookError.message : String(webhookError) },
         { status: 500 }
       )
     }
@@ -138,10 +142,10 @@ export async function POST(
 // GET 請求 - 獲取訓練狀態
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { agentId: string } }
 ) {
   try {
-    const { id } = params
+    const { agentId } = params
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
     
@@ -158,7 +162,7 @@ export async function GET(
     const { data: agent, error } = await supabase
       .from('ai_agents')
       .select('training, status')
-      .eq('id', id)
+      .eq('id', agentId)
       .eq('user_id', userId)
       .single()
     
@@ -172,7 +176,7 @@ export async function GET(
       .select('*')
       .eq('user_id', userId)
       .eq('task_type', 'agent_training')
-      .contains('input_data', { agentId: id })
+      .contains('input_data', { agentId: agentId })
       .order('created_at', { ascending: false })
       .limit(5)
     

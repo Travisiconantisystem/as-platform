@@ -76,7 +76,7 @@ export async function sendToN8NWebhook(request: N8NWebhookRequest): Promise<N8NW
     // 準備 webhook 負載
     const webhookPayload = {
       executionId,
-      workflowId: request.workflowId || workflow.workflowId,
+      workflowId: request.workflowId || (workflow as any).workflowId,
       taskType: request.taskType,
       userId: request.userId,
       data: request.data,
@@ -88,7 +88,7 @@ export async function sendToN8NWebhook(request: N8NWebhookRequest): Promise<N8NW
     }
 
     // 發送到 N8N webhook
-    const response = await fetch(workflow.webhookUrl, {
+    const response = await fetch(workflow.url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ async function logWebhookExecution(data: {
   webhookUrl: string
 }) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     
     const { error } = await supabase
       .from('ai_tasks')
@@ -216,7 +216,7 @@ export async function checkTaskStatus(executionId: string): Promise<{
   progress?: number
 }> {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     
     const { data, error } = await supabase
       .from('ai_tasks')
@@ -264,7 +264,7 @@ export async function cancelTask(executionId: string, userId: string): Promise<b
     
     if (response.ok) {
       // 更新數據庫狀態
-      const supabase = createServerClient()
+      const supabase = await createServerClient()
       await supabase
         .from('ai_tasks')
         .update({

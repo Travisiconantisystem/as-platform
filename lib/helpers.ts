@@ -244,7 +244,7 @@ export const arrayHelpers = {
     const shuffled = [...array]
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      ;[shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!]
     }
     return shuffled
   },
@@ -285,17 +285,17 @@ export const objectHelpers = {
   },
 
   // 深度合併
-  deepMerge: <T>(target: T, ...sources: Partial<T>[]): T => {
+  deepMerge: <T extends Record<string, any>>(target: T, ...sources: Partial<T>[]): T => {
     if (!sources.length) return target
     const source = sources.shift()
     
     if (objectHelpers.isObject(target) && objectHelpers.isObject(source)) {
       for (const key in source) {
         if (objectHelpers.isObject(source[key])) {
-          if (!target[key]) Object.assign(target, { [key]: {} })
-          objectHelpers.deepMerge(target[key], source[key])
+          if (!target[key]) Object.assign(target as any, { [key]: {} })
+          objectHelpers.deepMerge(target[key], source[key] as any)
         } else {
-          Object.assign(target, { [key]: source[key] })
+          Object.assign(target as any, { [key]: source[key] })
         }
       }
     }
@@ -329,14 +329,15 @@ export const objectHelpers = {
     let current = obj
     
     for (let i = 0; i < keys.length - 1; i++) {
-      const key = keys[i]
+      const key = keys[i]!
       if (!(key in current) || !objectHelpers.isObject(current[key])) {
         current[key] = {}
       }
       current = current[key]
     }
     
-    current[keys[keys.length - 1]] = value
+    const lastKey = keys[keys.length - 1]!
+    current[lastKey] = value
     return obj
   },
 

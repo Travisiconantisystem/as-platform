@@ -78,7 +78,8 @@ interface IntegrationState {
   fetchTemplates: () => Promise<void>
 }
 
-export const useIntegrationStore = create<IntegrationState>()(n  persist(
+export const useIntegrationStore = create<IntegrationState>()(
+  persist(
     (set, get) => ({
       integrations: [],
       templates: [],

@@ -12,27 +12,21 @@ import {
   User, 
   Bell, 
   Shield, 
-  Database, 
   Zap, 
   Mail, 
   Key, 
-  Globe, 
   Palette, 
   Monitor, 
   Smartphone, 
   Save, 
   RefreshCw, 
-  AlertTriangle, 
-  CheckCircle, 
   Eye, 
   EyeOff, 
   Copy, 
-  ExternalLink,
   Download,
   Upload,
   Trash2,
   Plus,
-  Edit,
   Info
 } from 'lucide-react'
 import {
@@ -57,14 +51,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from '@/components/ui/alert'
-import { useAppStore } from '@/lib/store/useAppStore'
+// import { useAppStore } from '@/lib/store/useAppStore'
 
 interface APIKey {
   id: string
@@ -264,15 +257,15 @@ export default function SettingsPage() {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [language, setLanguage] = useState('zh-TW')
   const [timezone, setTimezone] = useState('Asia/Hong_Kong')
-  const { user, setUser } = useAppStore()
+  // const { user, setUser } = useAppStore()
 
-  const handleApiKeyToggle = (keyId: string, status: APIKey['status']) => {
-    setApiKeys(prev => prev.map(key => 
-      key.id === keyId 
-        ? { ...key, status }
-        : key
-    ))
-  }
+  // const handleApiKeyToggle = (keyId: string, status: APIKey['status']) => {
+  //   setApiKeys(prev => prev.map(key => 
+  //     key.id === keyId 
+  //       ? { ...key, status }
+  //       : key
+  //   ))
+  // }
 
   const handleNotificationToggle = (notificationId: string, enabled: boolean) => {
     setNotifications(prev => prev.map(notification => 

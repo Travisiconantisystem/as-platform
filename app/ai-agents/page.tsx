@@ -22,7 +22,6 @@ import {
   MessageSquare,
   Mail,
   BarChart3,
-  Users,
   Target,
   CheckCircle,
   AlertTriangle,
@@ -30,9 +29,7 @@ import {
   Edit,
   Copy,
   Eye,
-  TrendingUp,
-  Calendar,
-  Filter
+  TrendingUp
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -47,7 +44,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -405,18 +401,16 @@ export default function AIAgentsPage() {
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [selectedAgent, setSelectedAgent] = useState<AIAgent | null>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const { aiAgents, setAIAgents } = useAppStore()
+  const { aiTasks, setAiTasks } = useAppStore()
 
   useEffect(() => {
     // 從 store 載入 AI 智能體數據
-    if (aiAgents.length === 0) {
-      setAIAgents(mockAIAgents)
+    if (aiTasks.length === 0) {
+      setAiTasks(mockAIAgents)
     } else {
-      setAgents(aiAgents)
+      setAgents(aiTasks)
     }
-  }, [aiAgents, setAIAgents])
+  }, [aiTasks, setAiTasks])
 
   const filteredAgents = agents.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -458,11 +452,8 @@ export default function AIAgentsPage() {
         ))
         break
       case 'edit':
-        const agent = agents.find(a => a.id === agentId)
-        if (agent) {
-          setSelectedAgent(agent)
-          setIsEditDialogOpen(true)
-        }
+        // TODO: 實現編輯功能
+        console.log('編輯智能體:', agentId)
         break
       case 'delete':
         setAgents(prev => prev.filter(agent => agent.id !== agentId))
@@ -486,7 +477,6 @@ export default function AIAgentsPage() {
   }
 
   const activeCount = agents.filter(a => a.status === 'active').length
-  const pausedCount = agents.filter(a => a.status === 'paused').length
   const errorCount = agents.filter(a => a.status === 'error').length
   const totalRuns = agents.reduce((sum, a) => sum + a.totalRuns, 0)
   const avgSuccessRate = agents.reduce((sum, a) => sum + a.successRate, 0) / agents.length

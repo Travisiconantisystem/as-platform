@@ -18,13 +18,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
-  Database,
   Globe,
   MessageSquare,
   Activity,
-  Shield,
   FileText,
-  Calendar,
   Search,
   Plus
 } from 'lucide-react'

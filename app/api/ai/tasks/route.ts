@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/client'
 import { 
   sendToN8NWebhook,
-  batchSendToN8N,
   checkTaskStatus,
   cancelTask,
-  N8NWebhookRequest
+  N8NWebhookRequest,
+  batchSendToN8N
 } from '@/lib/n8n/webhook-client'
 
 export async function POST(request: NextRequest) {
   try {
     const { taskType, data, userId, batch } = await request.json()
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     
     // 檢查用戶認證
     if (!userId) {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     
     // 批量處理
     if (batch && Array.isArray(data)) {
-      result = await batchProcess(data)
+      result = await batchSendToN8N(data, userId)
       
       // 保存批量任務結果
       const { error } = await supabase
@@ -101,7 +101,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const taskId = searchParams.get('taskId')
-    const userId = searchParams.get('userId')
     
     if (!taskId) {
       return NextResponse.json({ error: 'Task ID required' }, { status: 400 })
@@ -151,53 +150,5 @@ export async function DELETE(request: NextRequest) {
       error: 'Failed to cancel task',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
-  }
-}
-
-// 輔助函數：更新用戶AI使用統計
-async function updateUserAiUsage(supabase: any, userId: string, taskType: string) {
-  try {
-    const today = new Date().toISOString().split('T')[0]
-    
-    // 檢查今日使用記錄是否存在
-    const { data: existingUsage } = await supabase
-      .from('user_ai_usage')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', today)
-      .single()
-    
-    if (existingUsage) {
-      // 更新現有記錄
-      await supabase
-        .from('user_ai_usage')
-        .update({
-          total_requests: existingUsage.total_requests + 1,
-          [`${taskType.replace('-', '_')}_requests`]: (existingUsage[`${taskType.replace('-', '_')}_requests`] || 0) + 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId)
-        .eq('date', today)
-    } else {
-      // 創建新記錄
-      const newUsage = {
-        user_id: userId,
-        date: today,
-        total_requests: 1,
-        total_tokens: 0, // 這裡可以根據實際token使用量更新
-        total_cost: 0, // 這裡可以根據實際成本更新
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-      
-      newUsage[`${taskType.replace('-', '_')}_requests`] = 1
-      
-      await supabase
-        .from('user_ai_usage')
-        .insert(newUsage)
-    }
-  } catch (error) {
-    console.error('Failed to update AI usage:', error)
-    // 不拋出錯誤，因為這不應該影響主要功能
   }
 }

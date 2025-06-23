@@ -6,7 +6,6 @@ import {
   Plus,
   Zap,
   Bot,
-  FileText,
   Settings,
   Upload,
   Download,

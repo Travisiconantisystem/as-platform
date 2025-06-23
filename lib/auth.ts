@@ -3,21 +3,8 @@ import GoogleProvider from 'next-auth/providers/google'
 import GitHubProvider from 'next-auth/providers/github'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { SupabaseAdapter } from '@auth/supabase-adapter'
-import { createClient } from '@supabase/supabase-js'
 import { supabaseAdmin } from './supabase'
-import { Database } from './database.types'
 import bcrypt from 'bcryptjs'
-
-// Supabase adapter配置
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    db: {
-      schema: 'next_auth',
-    },
-  }
-)
 
 export const authOptions: NextAuthOptions = {
   adapter: SupabaseAdapter({
@@ -79,8 +66,8 @@ export const authOptions: NextAuthOptions = {
           return {
             id: user.id,
             email: user.email,
-            name: user.full_name,
-            image: user.avatar_url,
+            name: user.name,
+            image: user.avatar,
             role: user.role,
           }
         } catch (error) {
@@ -99,7 +86,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/signin',
-    signUp: '/auth/signup',
     error: '/auth/error',
     verifyRequest: '/auth/verify-request',
     newUser: '/auth/new-user',
@@ -108,7 +94,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account, profile }) {
       // 初次登入時將用戶信息添加到token
       if (user) {
-        token.role = user.role
+        token.role = (user as any).role
         token.userId = user.id
       }
 
@@ -128,10 +114,8 @@ export const authOptions: NextAuthOptions = {
               .from('users')
               .insert({
                 email: profile.email!,
-                full_name: profile.name || '',
-                avatar_url: profile.image || '',
-                provider: account.provider,
-                provider_id: account.providerAccountId,
+                name: profile.name || '',
+                avatar: profile.image || '',
                 role: 'user',
                 is_active: true,
               })
@@ -155,14 +139,14 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       // 將token中的信息添加到session
-      if (token) {
-        session.user.id = token.userId as string
-        session.user.role = token.role as string
+      if (token && session.user) {
+        ;(session.user as any).id = token.userId as string
+        ;(session.user as any).role = token.role as string
       }
 
       return session
     },
-    async signIn({ user, account, profile, email, credentials }) {
+    async signIn({ user }) {
       // 檢查用戶是否被禁用
       if (user.email) {
         try {
@@ -193,33 +177,35 @@ export const authOptions: NextAuthOptions = {
     },
   },
   events: {
-    async signIn({ user, account, profile, isNewUser }) {
+    async signIn({ user, account, isNewUser }) {
       // 記錄登入事件
       try {
         await supabaseAdmin.from('audit_logs').insert({
           user_id: user.id,
           action: 'sign_in',
-          details: {
+          resource_type: 'auth',
+          new_values: {
             provider: account?.provider,
             isNewUser,
           },
-          ip_address: '', // 需要從request中獲取
-          user_agent: '', // 需要從request中獲取
+          ip_address: null,
+          user_agent: null,
         })
       } catch (error) {
         console.error('SignIn event error:', error)
       }
     },
-    async signOut({ session, token }) {
+    async signOut({ session }) {
       // 記錄登出事件
       try {
-        if (session?.user?.id) {
+        if (session?.user && (session.user as any).id) {
           await supabaseAdmin.from('audit_logs').insert({
-            user_id: session.user.id,
+            user_id: (session.user as any).id,
             action: 'sign_out',
-            details: {},
-            ip_address: '',
-            user_agent: '',
+            resource_type: 'auth',
+            new_values: {},
+            ip_address: null,
+            user_agent: null,
           })
         }
       } catch (error) {

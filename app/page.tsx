@@ -12,9 +12,8 @@ import { WorkflowStatus } from '@/components/dashboard/workflow-status'
 import { AIAgentStatus } from '@/components/dashboard/ai-agent-status'
 import { SystemHealth } from '@/components/dashboard/system-health'
 import { WelcomeModal } from '@/components/modals/welcome-modal'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
+
 import { ErrorBoundary } from '@/components/ui/error-boundary'
-import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: '儀表板',
@@ -57,7 +56,7 @@ function DashboardSkeleton() {
 }
 
 // 錯誤回退組件
-function DashboardError({ error, reset }: { error: Error; reset: () => void }) {
+function DashboardError({ error, resetError }: { error?: Error | undefined; resetError: () => void }) {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
       <div className="rounded-full bg-destructive/10 p-3">
@@ -78,11 +77,11 @@ function DashboardError({ error, reset }: { error: Error; reset: () => void }) {
       <div className="text-center">
         <h3 className="text-lg font-semibold">載入儀表板時發生錯誤</h3>
         <p className="text-sm text-muted-foreground">
-          {error.message || '請稍後再試或聯繫技術支援'}
+          {error?.message || '請稍後再試或聯繫技術支援'}
         </p>
       </div>
       <button
-        onClick={reset}
+        onClick={resetError}
         className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
       >
         重新載入
@@ -102,7 +101,7 @@ async function DashboardContent() {
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
       {/* 頁面標題和操作 */}
-      <DashboardHeader user={session.user} />
+      <DashboardHeader />
       
       {/* 統計概覽 */}
       <Suspense fallback={
@@ -112,7 +111,7 @@ async function DashboardContent() {
           ))}
         </div>
       }>
-        <DashboardStats userId={session.user.id} />
+        <DashboardStats />
       </Suspense>
       
       {/* 主要內容區域 */}
@@ -124,7 +123,7 @@ async function DashboardContent() {
             <div className="h-96 animate-pulse rounded-xl bg-muted" />
           }>
             <ErrorBoundary fallback={DashboardError}>
-              <RecentActivity userId={session.user.id} />
+              <RecentActivity />
             </ErrorBoundary>
           </Suspense>
           
@@ -133,7 +132,7 @@ async function DashboardContent() {
             <div className="h-64 animate-pulse rounded-xl bg-muted" />
           }>
             <ErrorBoundary fallback={DashboardError}>
-              <WorkflowStatus userId={session.user.id} />
+              <WorkflowStatus />
             </ErrorBoundary>
           </Suspense>
         </div>
@@ -152,7 +151,7 @@ async function DashboardContent() {
             <div className="h-48 animate-pulse rounded-xl bg-muted" />
           }>
             <ErrorBoundary fallback={DashboardError}>
-              <PlatformOverview userId={session.user.id} />
+              <PlatformOverview />
             </ErrorBoundary>
           </Suspense>
           
@@ -161,7 +160,7 @@ async function DashboardContent() {
             <div className="h-48 animate-pulse rounded-xl bg-muted" />
           }>
             <ErrorBoundary fallback={DashboardError}>
-              <AIAgentStatus userId={session.user.id} />
+              <AIAgentStatus />
             </ErrorBoundary>
           </Suspense>
           

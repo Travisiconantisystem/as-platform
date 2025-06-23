@@ -23,10 +23,8 @@ import {
   MessageSquare,
   BarChart3,
   Users,
-  Calendar,
   FileText,
-  Image,
-  Video
+  Image
 } from 'lucide-react'
 import {
   DropdownMenu,

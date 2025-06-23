@@ -32,7 +32,6 @@ const eslintConfig = [
         }
       ],
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/prefer-const": "error",
       "@typescript-eslint/no-non-null-assertion": "warn",
       
       // React 規則
@@ -51,7 +50,6 @@ const eslintConfig = [
       "no-console": ["warn", { "allow": ["warn", "error"] }],
       "no-debugger": "error",
       "no-alert": "error",
-      "prefer-const": "error",
       "no-var": "error",
       "eqeqeq": ["error", "always"],
       "curly": ["error", "all"],

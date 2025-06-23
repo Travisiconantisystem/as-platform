@@ -24,7 +24,8 @@ interface AuthState {
   updateProfile: (data: Partial<User>) => Promise<boolean>
 }
 
-export const useAuthStore = create<AuthState>()(n  persist(
+export const useAuthStore = create<AuthState>()(
+  persist(
     (set, get) => ({
       user: null,
       isLoading: false,

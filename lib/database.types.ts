@@ -20,6 +20,7 @@ export interface Database {
           avatar: string | null
           role: 'admin' | 'user' | 'viewer'
           is_active: boolean
+          password_hash: string | null
           created_at: string
           updated_at: string
           last_login_at: string | null
@@ -31,6 +32,7 @@ export interface Database {
           avatar?: string | null
           role?: 'admin' | 'user' | 'viewer'
           is_active?: boolean
+          password_hash?: string | null
           created_at?: string
           updated_at?: string
           last_login_at?: string | null
@@ -42,6 +44,7 @@ export interface Database {
           avatar?: string | null
           role?: 'admin' | 'user' | 'viewer'
           is_active?: boolean
+          password_hash?: string | null
           created_at?: string
           updated_at?: string
           last_login_at?: string | null

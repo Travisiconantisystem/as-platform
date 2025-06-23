@@ -7,10 +7,10 @@ import { v4 as uuidv4 } from 'uuid'
 // POST 請求 - 測試 AI 智能體
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { agentId: string } }
 ) {
   try {
-    const { id } = params
+    const { agentId } = params
     const body = await request.json()
     const { userId, testInput, testConfig } = body
     
@@ -34,7 +34,7 @@ export async function POST(
     const { data: agent, error: agentError } = await supabase
       .from('ai_agents')
       .select('*')
-      .eq('id', id)
+      .eq('id', agentId)
       .eq('user_id', userId)
       .single()
     
@@ -60,7 +60,7 @@ export async function POST(
         user_id: userId,
         task_type: 'agent_test',
         input_data: {
-          agentId: id,
+          agentId: agentId,
           testInput: testInput,
           config: testConfig
         },
@@ -76,18 +76,22 @@ export async function POST(
     // 通過 N8N Webhook 執行測試
     try {
       const webhookResult = await sendToN8NWebhook({
+        workflowId: '',
         taskType: 'agent_test',
-        taskId: testTaskId,
-        agentId: id,
-        testInput: testInput,
-        agentConfig: agent.config,
-        testConfig: {
-          temperature: testConfig?.temperature || agent.config?.temperature || 0.7,
-          maxTokens: testConfig?.maxTokens || agent.config?.maxTokens || 1000,
-          includeMetrics: testConfig?.includeMetrics || true,
-          timeout: testConfig?.timeout || 30000
-        }
-      }, userId)
+        data: {
+          taskId: testTaskId,
+          agentId: agentId,
+          testInput: testInput,
+          agentConfig: agent.config,
+          testConfig: {
+            temperature: testConfig?.temperature || agent.config?.temperature || 0.7,
+            maxTokens: testConfig?.maxTokens || agent.config?.maxTokens || 1000,
+            includeMetrics: testConfig?.includeMetrics || true,
+            timeout: testConfig?.timeout || 30000
+          }
+        },
+        userId: userId
+      })
       
       return NextResponse.json({
         success: true,
@@ -105,13 +109,13 @@ export async function POST(
         .from('ai_tasks')
         .update({
           status: 'failed',
-          error_message: webhookError.message,
+          error_message: webhookError instanceof Error ? webhookError.message : String(webhookError),
           updated_at: new Date().toISOString()
         })
         .eq('task_id', testTaskId)
       
       return NextResponse.json(
-        { error: '執行測試失敗', details: webhookError.message },
+        { error: '執行測試失敗', details: webhookError instanceof Error ? webhookError.message : String(webhookError) },
         { status: 500 }
       )
     }
@@ -125,10 +129,10 @@ export async function POST(
 // GET 請求 - 獲取測試歷史
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { agentId: string } }
 ) {
   try {
-    const { id } = params
+    const { agentId } = params
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
     const limit = parseInt(searchParams.get('limit') || '10')
@@ -147,7 +151,7 @@ export async function GET(
     const { data: agent, error: agentError } = await supabase
       .from('ai_agents')
       .select('id')
-      .eq('id', id)
+      .eq('id', agentId)
       .eq('user_id', userId)
       .single()
     
@@ -161,7 +165,7 @@ export async function GET(
       .select('*')
       .eq('user_id', userId)
       .eq('task_type', 'agent_test')
-      .contains('input_data', { agentId: id })
+      .contains('input_data', { agentId: agentId })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
     
@@ -176,7 +180,7 @@ export async function GET(
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('task_type', 'agent_test')
-      .contains('input_data', { agentId: id })
+      .contains('input_data', { agentId: agentId })
     
     return NextResponse.json({
       testHistory: testHistory || [],

@@ -245,6 +245,14 @@ export interface Pagination {
   totalPages: number;
 }
 
+export interface PaginatedResponse<T = any> {
+  success: boolean;
+  data: T[];
+  pagination: Pagination;
+  error?: string;
+  message?: string;
+}
+
 // 表單相關類型
 export interface FormField {
   name: string;

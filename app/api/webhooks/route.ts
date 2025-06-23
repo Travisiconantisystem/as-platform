@@ -1,35 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { z } from 'zod'
 import crypto from 'crypto'
 
-// Webhook 事件驗證 schema
-const webhookEventSchema = z.object({
-  id: z.string(),
-  type: z.enum([
-    'workflow.started',
-    'workflow.completed',
-    'workflow.failed',
-    'workflow.paused',
-    'integration.connected',
-    'integration.disconnected',
-    'integration.error',
-    'ai_agent.message',
-    'ai_agent.training_completed',
-    'ai_task.completed',
-    'ai_task.failed',
-    'platform.webhook',
-    'n8n.execution'
-  ]),
-  source: z.enum(['n8n', 'supabase', 'claude', 'openai', 'zapier', 'make', 'internal']),
-  timestamp: z.string(),
-  data: z.record(z.any()),
-  user_id: z.string().optional(),
-  workflow_id: z.string().optional(),
-  integration_id: z.string().optional(),
-  agent_id: z.string().optional()
-})
+
 
 // 驗證 Webhook 簽名
 function verifyWebhookSignature(
@@ -90,7 +64,7 @@ async function handleAITaskCallback(
     
     if (updateError) {
       console.error('更新 AI 任務狀態錯誤:', updateError)
-      return { success: false, error: updateError.message }
+      return { success: false, error: updateError instanceof Error ? updateError.message : 'Unknown error' }
     }
     
     // 更新用戶 AI 使用統計
@@ -157,7 +131,7 @@ async function handleAITaskCallback(
     
   } catch (error) {
     console.error('處理 AI 任務回調錯誤:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
 
@@ -279,60 +253,59 @@ async function handleN8NWebhook(
     
   } catch (error) {
     console.error('處理 N8N Webhook 錯誤:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
 
 // 處理第三方平台 Webhook
 async function handlePlatformWebhook(
   event: any,
-  platform: string,
-  supabase: any
+  platform: string
 ) {
   try {
     // 根據平台類型處理不同的 Webhook 事件
     switch (platform) {
       case 'stripe':
-        return await handleStripeWebhook(event, supabase)
+        return await handleStripeWebhook(event)
       case 'shopify':
-        return await handleShopifyWebhook(event, supabase)
+          return await handleShopifyWebhook(event)
       case 'mailchimp':
-        return await handleMailchimpWebhook(event, supabase)
+          return await handleMailchimpWebhook(event)
       case 'slack':
-        return await handleSlackWebhook(event, supabase)
+          return await handleSlackWebhook(event)
       default:
         console.log(`未知平台 Webhook: ${platform}`, event)
         return { success: true, message: '已接收但未處理' }
     }
   } catch (error) {
     console.error(`處理 ${platform} Webhook 錯誤:`, error)
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
 
 // Stripe Webhook 處理
-async function handleStripeWebhook(event: any, supabase: any) {
+async function handleStripeWebhook(event: any) {
   // 處理 Stripe 訂閱、付款等事件
   console.log('Stripe Webhook:', event.type, event.data)
   return { success: true }
 }
 
 // Shopify Webhook 處理
-async function handleShopifyWebhook(event: any, supabase: any) {
-  // 處理 Shopify 訂單、產品等事件
+async function handleShopifyWebhook(event: any) {
+  // 處理 Shopify 訂單、產品等 事件
   console.log('Shopify Webhook:', event)
   return { success: true }
 }
 
 // Mailchimp Webhook 處理
-async function handleMailchimpWebhook(event: any, supabase: any) {
+async function handleMailchimpWebhook(event: any) {
   // 處理 Mailchimp 訂閱、退訂等事件
   console.log('Mailchimp Webhook:', event)
   return { success: true }
 }
 
 // Slack Webhook 處理
-async function handleSlackWebhook(event: any, supabase: any) {
+async function handleSlackWebhook(event: any) {
   // 處理 Slack 消息、事件等
   console.log('Slack Webhook:', event)
   return { success: true }
@@ -409,7 +382,7 @@ export async function POST(request: NextRequest) {
         break
       case 'platform':
         if (platform) {
-          result = await handlePlatformWebhook(event, platform, supabase)
+          result = await handlePlatformWebhook(event, platform)
         } else {
           result = { success: false, error: '缺少平台參數' }
         }
@@ -434,12 +407,12 @@ export async function POST(request: NextRequest) {
     if (result.success) {
       return NextResponse.json({
         success: true,
-        message: result.message || 'Webhook 處理成功'
+        message: (result as any).message || 'Webhook 處理成功'
       })
     } else {
       return NextResponse.json(
         { 
-          error: result.error || 'Webhook 處理失敗' 
+          error: (result as any).error || 'Webhook 處理失敗' 
         },
         { status: 500 }
       )

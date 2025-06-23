@@ -140,20 +140,7 @@ const getTypeIcon = (type: AIAgent['type']) => {
   }
 }
 
-const getStatusColor = (status: AIAgent['status']) => {
-  switch (status) {
-    case 'active':
-      return 'text-green-500'
-    case 'inactive':
-      return 'text-gray-500'
-    case 'training':
-      return 'text-blue-500'
-    case 'error':
-      return 'text-red-500'
-    default:
-      return 'text-gray-400'
-  }
-}
+// getStatusColor function removed as it was unused
 
 const getBadgeVariant = (status: AIAgent['status']) => {
   switch (status) {

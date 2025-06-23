@@ -21,7 +21,7 @@ apiClient.interceptors.request.use(
   async (config) => {
     // 添加認證token
     const session = await getSession()
-    if (session?.accessToken) {
+    if (session && 'accessToken' in session && session.accessToken) {
       config.headers.Authorization = `Bearer ${session.accessToken}`
     }
 

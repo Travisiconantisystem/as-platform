@@ -12,7 +12,6 @@ import {
   Users, 
   Mail, 
   Target,
-  Clock,
   DollarSign,
   Activity,
   Eye,
@@ -21,11 +20,7 @@ import {
   Heart,
   Share,
   Download,
-  Filter,
-  Calendar,
   RefreshCw,
-  ArrowUpRight,
-  ArrowDownRight,
   Minus
 } from 'lucide-react'
 import {
@@ -273,29 +268,52 @@ function getStatusText(status: WorkflowMetrics['status']) {
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d')
-  const [currentData, setCurrentData] = useState(mockAnalyticsData[0])
-  const [previousData, setPreviousData] = useState(mockAnalyticsData[1])
-  const { analytics, setAnalytics } = useAppStore()
+  const currentData = mockAnalyticsData[0] || {
+    period: '本週',
+    totalLeads: 0,
+    qualifiedLeads: 0,
+    emailsSent: 0,
+    emailsOpened: 0,
+    emailsClicked: 0,
+    emailsReplied: 0,
+    conversionRate: 0,
+    avgResponseTime: 0,
+    revenue: 0,
+    cost: 0,
+    roi: 0
+  }
+  const previousData = mockAnalyticsData[1] || {
+    period: '上週',
+    totalLeads: 0,
+    qualifiedLeads: 0,
+    emailsSent: 0,
+    emailsOpened: 0,
+    emailsClicked: 0,
+    emailsReplied: 0,
+    conversionRate: 0,
+    avgResponseTime: 0,
+    revenue: 0,
+    cost: 0,
+    roi: 0
+  }
+  const { stats, setStats } = useAppStore()
 
   useEffect(() => {
     // 從 store 載入分析數據
-    if (!analytics.totalLeads) {
-      setAnalytics({
-        totalLeads: currentData.totalLeads,
-        qualifiedLeads: currentData.qualifiedLeads,
-        conversionRate: currentData.conversionRate,
-        revenue: currentData.revenue,
-        emailMetrics: {
-          sent: currentData.emailsSent,
-          opened: currentData.emailsOpened,
-          clicked: currentData.emailsClicked,
-          replied: currentData.emailsReplied
-        },
-        socialMetrics: mockSocialMetrics,
-        workflowMetrics: mockWorkflowMetrics
+    if (!stats.totalWorkflows && currentData) {
+      setStats({
+        totalWorkflows: currentData.totalLeads,
+        activeWorkflows: currentData.qualifiedLeads,
+        totalExecutions: currentData.conversionRate,
+        successRate: currentData.revenue,
+        aiUsage: {
+          totalTokens: currentData.emailsSent,
+          totalCost: currentData.emailsOpened,
+          monthlyUsage: currentData.emailsClicked
+        }
       })
     }
-  }, [analytics, setAnalytics, currentData])
+  }, [stats, setStats, currentData])
 
   const handleTimeRangeChange = (value: string) => {
     setTimeRange(value)

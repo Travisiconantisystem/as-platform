@@ -46,8 +46,8 @@ const createWorkflowSchema = z.object({
   is_public: z.boolean().optional().default(false)
 })
 
-// 更新工作流程驗證 schema
-const updateWorkflowSchema = createWorkflowSchema.partial()
+// 更新工作流程驗證 schema (如需要可在此定義)
+// const updateWorkflowSchema = createWorkflowSchema.partial()
 
 // 獲取工作流程列表
 export async function GET(request: NextRequest) {

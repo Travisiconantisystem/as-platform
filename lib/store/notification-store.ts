@@ -107,7 +107,8 @@ const defaultSettings: NotificationSettings = {
   }
 }
 
-export const useNotificationStore = create<NotificationState>()(n  persist(
+export const useNotificationStore = create<NotificationState>()(
+  persist(
     (set, get) => ({
       notifications: [],
       settings: defaultSettings,

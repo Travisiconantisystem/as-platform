@@ -53,7 +53,8 @@ interface AppState {
   reset: () => void;
 }
 
-export const useAppStore = create<AppState>()(n  persist(
+export const useAppStore = create<AppState>()(
+  persist(
     (set, get) => ({
       // 初始狀態
       user: null,

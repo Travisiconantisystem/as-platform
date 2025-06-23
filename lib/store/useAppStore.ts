@@ -72,7 +72,7 @@ interface AppState {
   updateStats: (key: string, value: any) => void
 }
 
-export const useAppStore = create<AppState>()()
+export const useAppStore = create<AppState>()(
   devtools(
     persist(
       (set, get) => ({
