@@ -16,7 +16,7 @@
     "test:coverage": "jest --coverage",
     "analyze": "cross-env ANALYZE=true next build",
     "clean": "rm -rf .next out dist coverage",
-    "prepare": "husky install",
+    "prepare": "echo 'Skipping husky install in production'",
     "pre-commit": "lint-staged",
     "db:generate-types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/database.types.ts",
     "db:reset": "supabase db reset",
