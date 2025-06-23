@@ -1,103 +1,204 @@
-import Image from "next/image";
+import { Metadata } from 'next'
+import { Suspense } from 'react'
+import { getServerSession } from 'next-auth/next'
+import { redirect } from 'next/navigation'
+import { authOptions } from '@/lib/auth'
+import { DashboardHeader } from '@/components/dashboard/dashboard-header'
+import { DashboardStats } from '@/components/dashboard/dashboard-stats'
+import { RecentActivity } from '@/components/dashboard/recent-activity'
+import { QuickActions } from '@/components/dashboard/quick-actions'
+import { PlatformOverview } from '@/components/dashboard/platform-overview'
+import { WorkflowStatus } from '@/components/dashboard/workflow-status'
+import { AIAgentStatus } from '@/components/dashboard/ai-agent-status'
+import { SystemHealth } from '@/components/dashboard/system-health'
+import { WelcomeModal } from '@/components/modals/welcome-modal'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { cn } from '@/lib/utils'
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+export const metadata: Metadata = {
+  title: '儀表板',
+  description: 'AS Platform 主控台 - 管理您的自動化工作流程、AI智能體和第三方平台整合',
 }
+
+// 載入組件
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* 標題骨架 */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-48 animate-pulse rounded-lg bg-muted" />
+          <div className="h-4 w-64 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="h-10 w-32 animate-pulse rounded-lg bg-muted" />
+      </div>
+      
+      {/* 統計卡片骨架 */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-32 animate-pulse rounded-xl bg-muted" />
+        ))}
+      </div>
+      
+      {/* 內容區域骨架 */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="h-96 animate-pulse rounded-xl bg-muted" />
+          <div className="h-64 animate-pulse rounded-xl bg-muted" />
+        </div>
+        <div className="space-y-6">
+          <div className="h-80 animate-pulse rounded-xl bg-muted" />
+          <div className="h-48 animate-pulse rounded-xl bg-muted" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 錯誤回退組件
+function DashboardError({ error, reset }: { error: Error; reset: () => void }) {
+  return (
+    <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
+      <div className="rounded-full bg-destructive/10 p-3">
+        <svg
+          className="h-6 w-6 text-destructive"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+      </div>
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">載入儀表板時發生錯誤</h3>
+        <p className="text-sm text-muted-foreground">
+          {error.message || '請稍後再試或聯繫技術支援'}
+        </p>
+      </div>
+      <button
+        onClick={reset}
+        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+      >
+        重新載入
+      </button>
+    </div>
+  )
+}
+
+// 主儀表板內容
+async function DashboardContent() {
+  const session = await getServerSession(authOptions)
+  
+  if (!session?.user) {
+    redirect('/auth/signin')
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* 頁面標題和操作 */}
+      <DashboardHeader user={session.user} />
+      
+      {/* 統計概覽 */}
+      <Suspense fallback={
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-32 animate-pulse rounded-xl bg-muted" />
+          ))}
+        </div>
+      }>
+        <DashboardStats userId={session.user.id} />
+      </Suspense>
+      
+      {/* 主要內容區域 */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* 左側主要內容 */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* 最近活動 */}
+          <Suspense fallback={
+            <div className="h-96 animate-pulse rounded-xl bg-muted" />
+          }>
+            <ErrorBoundary fallback={DashboardError}>
+              <RecentActivity userId={session.user.id} />
+            </ErrorBoundary>
+          </Suspense>
+          
+          {/* 工作流程狀態 */}
+          <Suspense fallback={
+            <div className="h-64 animate-pulse rounded-xl bg-muted" />
+          }>
+            <ErrorBoundary fallback={DashboardError}>
+              <WorkflowStatus userId={session.user.id} />
+            </ErrorBoundary>
+          </Suspense>
+        </div>
+        
+        {/* 右側邊欄 */}
+        <div className="space-y-6">
+          {/* 快速操作 */}
+          <Suspense fallback={
+            <div className="h-80 animate-pulse rounded-xl bg-muted" />
+          }>
+            <QuickActions />
+          </Suspense>
+          
+          {/* 平台概覽 */}
+          <Suspense fallback={
+            <div className="h-48 animate-pulse rounded-xl bg-muted" />
+          }>
+            <ErrorBoundary fallback={DashboardError}>
+              <PlatformOverview userId={session.user.id} />
+            </ErrorBoundary>
+          </Suspense>
+          
+          {/* AI智能體狀態 */}
+          <Suspense fallback={
+            <div className="h-48 animate-pulse rounded-xl bg-muted" />
+          }>
+            <ErrorBoundary fallback={DashboardError}>
+              <AIAgentStatus userId={session.user.id} />
+            </ErrorBoundary>
+          </Suspense>
+          
+          {/* 系統健康狀態 */}
+          <Suspense fallback={
+            <div className="h-32 animate-pulse rounded-xl bg-muted" />
+          }>
+            <ErrorBoundary fallback={DashboardError}>
+              <SystemHealth />
+            </ErrorBoundary>
+          </Suspense>
+        </div>
+      </div>
+      
+      {/* 歡迎模態框（僅首次訪問顯示） */}
+      <WelcomeModal />
+    </div>
+  )
+}
+
+// 主頁面組件
+export default function HomePage() {
+  return (
+    <main id="main-content" className="min-h-screen bg-background">
+      <Suspense fallback={
+        <div className="container mx-auto px-4 py-6">
+          <DashboardSkeleton />
+        </div>
+      }>
+        <ErrorBoundary fallback={DashboardError}>
+          <DashboardContent />
+        </ErrorBoundary>
+      </Suspense>
+    </main>
+  )
+}
+
+// 頁面配置
+export const dynamic = 'force-dynamic'
+export const revalidate = 0

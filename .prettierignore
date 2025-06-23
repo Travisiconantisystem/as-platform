@@ -1,0 +1,86 @@
+# 依賴項目
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 構建輸出
+.next/
+out/
+dist/
+build/
+coverage/
+
+# 環境文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 日誌文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 運行時數據
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# 快取目錄
+.npm
+.eslintcache
+.stylelintcache
+
+# 編輯器目錄和文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 作業系統生成的文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 特定文件類型
+*.min.js
+*.min.css
+*.bundle.js
+*.chunk.js
+
+# 文檔和配置文件
+README.md
+CHANGELOG.md
+LICENSE
+*.config.js
+*.config.mjs
+
+# 數據庫文件
+*.sqlite
+*.db
+
+# 臨時文件
+*.tmp
+*.temp
+
+# PWA 文件
+public/sw.js
+public/workbox-*.js
+public/worker-*.js
+public/fallback-*.js
+
+# 自動生成的類型文件
+*.d.ts
+next-env.d.ts
+
+# Supabase 生成的文件
+database/types.ts

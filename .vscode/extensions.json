@@ -1,0 +1,63 @@
+{
+  "recommendations": [
+    // 必備擴展
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    
+    // React/Next.js 開發
+    "ms-vscode.vscode-react-native",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "zignd.html-css-class-completion",
+    
+    // Git 工具
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+    "donjayamanne.githistory",
+    
+    // 代碼質量
+    "streetsidesoftware.code-spell-checker",
+    "usernamehw.errorlens",
+    "oderwat.indent-rainbow",
+    "aaron-bond.better-comments",
+    
+    // 開發工具
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "ms-vscode.vscode-markdown",
+    "yzhang.markdown-all-in-one",
+    
+    // 數據庫工具
+    "supabase.supabase",
+    "mtxr.sqltools",
+    
+    // 主題和圖標
+    "pkief.material-icon-theme",
+    "github.github-vscode-theme",
+    
+    // 實用工具
+    "ms-vscode.vscode-thunder-client",
+    "humao.rest-client",
+    "ms-vscode.vscode-todo-highlight",
+    "gruntfuggly.todo-tree",
+    
+    // AI 輔助
+    "github.copilot",
+    "github.copilot-chat",
+    
+    // 性能和調試
+    "ms-vscode.vscode-edge-devtools",
+    "firefox-devtools.vscode-firefox-debug",
+    
+    // 文檔和註釋
+    "mintlify.document",
+    "visualstudioexptteam.vscodeintellicode"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-typescript",
+    "hookyqr.beautify",
+    "ms-vscode.vscode-css"
+  ]
+}
