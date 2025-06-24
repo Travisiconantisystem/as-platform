@@ -9,9 +9,15 @@ const publicRoutes = [
   '/auth/signup',
   '/auth/error',
   '/auth/verify-request',
+  '/api/auth/signin',
+  '/api/auth/callback',
+  '/api/auth/session',
+  '/api/auth/providers',
+  '/api/auth/csrf',
   '/api/auth',
   '/api/health',
   '/api/webhooks',
+  '/not-found',
 ]
 
 
@@ -35,7 +41,16 @@ function matchesRoute(pathname: string, routes: string[]): boolean {
     if (route.endsWith('*')) {
       return pathname.startsWith(route.slice(0, -1))
     }
-    return pathname === route || pathname.startsWith(route + '/')
+    // 精確匹配或子路徑匹配
+    if (pathname === route) {
+      return true
+    }
+    // 對於 /api/auth 路由，允許所有子路徑
+    if (route === '/api/auth' && pathname.startsWith('/api/auth/')) {
+      return true
+    }
+    // 其他路由的子路徑匹配
+    return pathname.startsWith(route + '/')
   })
 }
 
@@ -137,31 +152,39 @@ setInterval(() => {
 
 // 主中間件函數
 export default withAuth(
-  function middleware(request: NextRequest) {
+  async function middleware(request) {
     const { pathname } = request.nextUrl
     const token = request.nextauth.token
     
-    // 檢查速率限制
-    if (!checkRateLimit(request)) {
-      return new NextResponse(
-        JSON.stringify({
-          success: false,
-          message: '請求過於頻繁，請稍後再試',
-          code: 'RATE_LIMIT_EXCEEDED',
-        }),
-        {
-          status: 429,
-          headers: {
-            'Content-Type': 'application/json',
-            'Retry-After': '900', // 15分鐘
-          },
-        }
-      )
+    // 對於公共路由，直接放行
+    if (matchesRoute(pathname, publicRoutes)) {
+      const response = NextResponse.next()
+      // 添加基本安全標頭
+      response.headers.set('X-Frame-Options', 'DENY')
+      response.headers.set('X-Content-Type-Options', 'nosniff')
+      return response
     }
     
-    // 公開路由直接通過
-    if (matchesRoute(pathname, publicRoutes)) {
-      return NextResponse.next()
+    // 速率限制檢查
+    if (!checkRateLimit(request)) {
+      if (pathname.startsWith('/api/')) {
+        return new NextResponse(
+          JSON.stringify({
+            success: false,
+            message: '請求過於頻繁，請稍後再試',
+            code: 'RATE_LIMIT_EXCEEDED',
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': '900', // 15分鐘
+            },
+          }
+        )
+      }
+      
+      return NextResponse.redirect(new URL('/auth/error?error=RateLimitExceeded', request.url))
     }
     
     // 檢查是否已認證
@@ -273,9 +296,18 @@ export default withAuth(
           return true
         }
         
-        // 其他路由需要token
+        // API路由需要token
+        if (pathname.startsWith('/api/')) {
+          return !!token
+        }
+        
+        // 其他受保護路由需要token
         return !!token
       },
+    },
+    pages: {
+      signIn: '/auth/signin',
+      error: '/auth/error',
     },
   }
 )
