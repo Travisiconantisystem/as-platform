@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
   avatar_url TEXT,
+  password_hash VARCHAR(255),
+  role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'manager', 'admin', 'super_admin')),
   subscription_tier VARCHAR(50) DEFAULT 'free' CHECK (subscription_tier IN ('free', 'basic', 'pro', 'enterprise')),
   ai_usage_limit INTEGER DEFAULT 1000 CHECK (ai_usage_limit >= 0),
   is_active BOOLEAN DEFAULT true,

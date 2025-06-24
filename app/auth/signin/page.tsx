@@ -1,216 +1,175 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, Suspense } from 'react'
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Github, Mail, Eye, EyeOff } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert } from '@/components/ui/alert'
 import Link from 'next/link'
 
-export default function SignInPage() {
+// 強制動態渲染
+export const dynamic = 'force-dynamic'
+
+function SignInForm() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
-  const error = searchParams.get('error')
-  
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
-  const [formError, setFormError] = useState('')
-
-  // 檢查是否已登入
-  useEffect(() => {
-    const checkSession = async () => {
-      const session = await getSession()
-      if (session) {
-        router.push(callbackUrl)
-      }
-    }
-    checkSession()
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setFormError('')
+    setError('')
 
     try {
       const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
+        email,
+        password,
         redirect: false,
       })
 
       if (result?.error) {
-        setFormError('登入失敗，請檢查您的電子郵件和密碼')
+        setError('登入失敗，請檢查您的郵箱和密碼')
       } else {
+        // 登入成功，重定向到回調URL
         router.push(callbackUrl)
       }
     } catch (error) {
-      setFormError('登入過程中發生錯誤，請稍後再試')
+      setError('登入過程中發生錯誤，請稍後再試')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleOAuthSignIn = async (provider: 'google' | 'github') => {
-    setIsLoading(true)
-    try {
-      await signIn(provider, { callbackUrl })
-    } catch (error) {
-      setFormError(`${provider === 'google' ? 'Google' : 'GitHub'} 登入失敗`)
-      setIsLoading(false)
-    }
+  const handleGoogleSignIn = () => {
+    signIn('google', { callbackUrl })
   }
 
-  const getErrorMessage = (error: string | null) => {
-    switch (error) {
-      case 'CredentialsSignin':
-        return '登入憑證無效，請檢查您的電子郵件和密碼'
-      case 'OAuthSignin':
-      case 'OAuthCallback':
-      case 'OAuthCreateAccount':
-      case 'EmailCreateAccount':
-        return 'OAuth 登入失敗，請稍後再試'
-      case 'Callback':
-        return '登入回調失敗'
-      case 'OAuthAccountNotLinked':
-        return '此帳戶已與其他登入方式關聯'
-      case 'EmailSignin':
-        return '電子郵件登入失敗'
-      case 'SessionRequired':
-        return '需要登入才能訪問此頁面'
-      default:
-        return '登入失敗，請稍後再試'
-    }
+  const handleGitHubSignIn = () => {
+    signIn('github', { callbackUrl })
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
             登入 AS Platform
-          </CardTitle>
-          <p className="text-sm text-muted-foreground text-center">
-            歡迎回來！請登入您的帳戶
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            或者{' '}
+            <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
+              創建新帳戶
+            </Link>
           </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* 錯誤訊息 */}
-          {(error || formError) && (
-            <Alert variant="destructive">
-              <AlertDescription>
-                {formError || getErrorMessage(error)}
-              </AlertDescription>
-            </Alert>
-          )}
+        </div>
 
-          {/* OAuth 登入按鈕 */}
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => handleOAuthSignIn('google')}
-              disabled={isLoading}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              使用 Google 登入
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => handleOAuthSignIn('github')}
-              disabled={isLoading}
-            >
-              <Github className="mr-2 h-4 w-4" />
-              使用 GitHub 登入
-            </Button>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>歡迎回來</CardTitle>
+            <CardDescription>
+              請輸入您的登入資訊
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <Alert className="mb-4 border-red-200 bg-red-50 text-red-800">
+                {error}
+              </Alert>
+            )}
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                或使用電子郵件
-              </span>
-            </div>
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="email">郵箱地址</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="mt-1"
+                  placeholder="請輸入您的郵箱"
+                />
+              </div>
 
-          {/* 電子郵件登入表單 */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">電子郵件</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">密碼</Label>
-              <div className="relative">
+              <div>
+                <Label htmlFor="password">密碼</Label>
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="輸入您的密碼"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={isLoading}
+                  className="mt-1"
+                  placeholder="請輸入您的密碼"
                 />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? '登入中...' : '登入'}
+              </Button>
+            </form>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">或者使用</span>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
+                  variant="outline"
+                  onClick={handleGoogleSignIn}
                   disabled={isLoading}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  Google
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGitHubSignIn}
+                  disabled={isLoading}
+                >
+                  GitHub
                 </Button>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              登入
-            </Button>
-          </form>
 
-          {/* 註冊連結 */}
-          <div className="text-center text-sm">
-            <span className="text-muted-foreground">還沒有帳戶？</span>{' '}
-            <Link href="/auth/signup" className="text-primary hover:underline">
-              立即註冊
-            </Link>
-          </div>
-
-          {/* 忘記密碼 */}
-          <div className="text-center">
-            <Link href="/auth/forgot-password" className="text-sm text-muted-foreground hover:underline">
-              忘記密碼？
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="mt-6 text-center">
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-500"
+              >
+                忘記密碼？
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
+  )
+}
+
+// 使用 Suspense 包裝的默認導出
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignInForm />
+    </Suspense>
   )
 }

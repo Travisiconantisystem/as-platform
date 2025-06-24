@@ -68,8 +68,10 @@ export function Header({ onMenuClick, className }: HeaderProps) {
             size="icon"
             className="md:hidden"
             onClick={onMenuClick}
+            aria-label="開啟選單"
           >
             <Menu className="h-5 w-5" />
+            <span className="sr-only">開啟選單</span>
           </Button>
 
           {/* Global Search */}
@@ -101,8 +103,9 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           {/* Notifications */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" aria-label="通知中心">
                 <Bell className="h-5 w-5" />
+                <span className="sr-only">通知中心</span>
                 {unreadCount > 0 && (
                   <Badge 
                     variant="destructive" 
@@ -143,13 +146,14 @@ export function Header({ onMenuClick, className }: HeaderProps) {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="用戶選單">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || ''} />
                   <AvatarFallback>
                     {session?.user?.name?.charAt(0) || session?.user?.email?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
+                <span className="sr-only">用戶選單</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>

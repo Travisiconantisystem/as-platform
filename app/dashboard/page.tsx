@@ -1,5 +1,8 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { RecentActivity } from '@/components/dashboard/recent-activity'
 import { WorkflowStatus } from '@/components/dashboard/workflow-status'
@@ -101,6 +104,32 @@ const quickActionsData = [
 ]
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/dashboard')
+    }
+  }, [status, router])
+
+  // 如果正在檢查認證狀態，顯示載入中
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-500 border-l-transparent border-r-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium">載入中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 如果未認證，不渲染內容（會被重定向）
+  if (status === 'unauthenticated') {
+    return null
+  }
+
   return (
     <div className="space-y-6">
       {/* 頁面標題 */}

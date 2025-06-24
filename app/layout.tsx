@@ -74,16 +74,16 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/icons/icon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icons/icon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '16x16 32x32', type: 'image/x-icon' },
+      { url: '/icons/icon-base.svg', sizes: 'any', type: 'image/svg+xml' },
     ],
     apple: [
-      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/icon-base.svg', sizes: '180x180', type: 'image/svg+xml' },
     ],
     other: [
       {
         rel: 'mask-icon',
-        url: '/icons/safari-pinned-tab.svg',
+        url: '/icons/icon-base.svg',
         color: '#007AFF',
       },
     ],
@@ -106,14 +106,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#000000' },
   ],
   colorScheme: 'light dark',
-  viewportFit: 'cover',
 }
 
 interface RootLayoutProps {
@@ -125,13 +122,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="zh-TW" className={inter.variable} suppressHydrationWarning>
       <head>
         {/* 預載入關鍵資源 */}
-        <link
-          rel="preload"
-          href="/fonts/sf-pro-display.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
+
         
         {/* DNS預取 */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
@@ -196,44 +187,26 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </ClientProviders>
         
         {/* 服務工作者註冊 */}
+        {/* Service Worker 已移除 - 避免註冊失敗錯誤 */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                      
-                      // 檢查更新
-                      registration.addEventListener('updatefound', function() {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', function() {
-                          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            document.getElementById('update-indicator').classList.remove('hidden');
-                          }
-                        });
-                      });
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
-                });
+              // Service Worker 功能已暫時移除
+              console.log('Service Worker registration skipped');
                 
-                // 離線/在線狀態檢測
-                function updateOnlineStatus() {
-                  const indicator = document.getElementById('offline-indicator');
-                  if (navigator.onLine) {
-                    indicator.classList.add('hidden');
-                  } else {
-                    indicator.classList.remove('hidden');
-                  }
+              // 離線/在線狀態檢測
+              function updateOnlineStatus() {
+                const indicator = document.getElementById('offline-indicator');
+                if (navigator.onLine) {
+                  indicator.classList.add('hidden');
+                } else {
+                  indicator.classList.remove('hidden');
                 }
-                
-                window.addEventListener('online', updateOnlineStatus);
-                window.addEventListener('offline', updateOnlineStatus);
-                updateOnlineStatus();
               }
+              
+              window.addEventListener('online', updateOnlineStatus);
+              window.addEventListener('offline', updateOnlineStatus);
+              updateOnlineStatus();
             `,
           }}
         />

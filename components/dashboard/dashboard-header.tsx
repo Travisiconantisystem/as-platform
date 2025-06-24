@@ -24,21 +24,22 @@ export function DashboardHeader() {
             {/* Search can be added here */}
           </div>
           <nav className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="通知">
               <Bell className="h-4 w-4" />
-              <span className="sr-only">Notifications</span>
+              <span className="sr-only">通知</span>
             </Button>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="設定">
               <Settings className="h-4 w-4" />
-              <span className="sr-only">Settings</span>
+              <span className="sr-only">設定</span>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="用戶選單">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/avatars/01.png" alt="@user" />
                     <AvatarFallback>U</AvatarFallback>
                   </Avatar>
+                  <span className="sr-only">用戶選單</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>

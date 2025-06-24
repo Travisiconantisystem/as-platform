@@ -1,15 +1,15 @@
-'use client'
-
-import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, ArrowLeft, Home } from 'lucide-react'
 import Link from 'next/link'
 
-export default function AuthErrorPage() {
-  const searchParams = useSearchParams()
-  const error = searchParams.get('error')
+interface AuthErrorPageProps {
+  searchParams: { error?: string }
+}
+
+export default function AuthErrorPage({ searchParams }: AuthErrorPageProps) {
+  const error = searchParams.error || null
 
   const getErrorMessage = (error: string | null) => {
     switch (error) {
@@ -27,6 +27,16 @@ export default function AuthErrorPage() {
         return {
           title: '驗證失敗',
           description: '無法驗證您的身份，請重新嘗試登入。',
+        }
+      case 'Callback':
+        return {
+          title: 'OAuth 回調錯誤',
+          description: 'OAuth 登入回調過程中發生錯誤，但您可能已成功登入。請嘗試訪問主頁面。',
+        }
+      case 'OAuthCallback':
+        return {
+          title: 'OAuth 回調錯誤',
+          description: 'OAuth 提供商回調配置可能有誤，請檢查回調 URL 設置。',
         }
       case 'Default':
       default:

@@ -159,9 +159,7 @@ export default withAuth(
     // 對於公共路由，直接放行
     if (matchesRoute(pathname, publicRoutes)) {
       const response = NextResponse.next()
-      // 添加基本安全標頭
-      response.headers.set('X-Frame-Options', 'DENY')
-      response.headers.set('X-Content-Type-Options', 'nosniff')
+      // 基本安全標頭已在 next.config.js 中配置
       return response
     }
     
@@ -177,7 +175,7 @@ export default withAuth(
           {
             status: 429,
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json; charset=utf-8',
               'Retry-After': '900', // 15分鐘
             },
           }
@@ -200,7 +198,7 @@ export default withAuth(
           {
             status: 401,
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json; charset=utf-8',
             },
           }
         )
@@ -224,7 +222,7 @@ export default withAuth(
           {
             status: 403,
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json; charset=utf-8',
             },
           }
         )
@@ -246,7 +244,7 @@ export default withAuth(
           {
             status: 403,
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json; charset=utf-8',
             },
           }
         )
@@ -255,27 +253,8 @@ export default withAuth(
       return NextResponse.redirect(new URL('/auth/error?error=AccessDenied', request.url))
     }
     
-    // 添加安全標頭
+    // 創建響應（安全標頭已在 next.config.js 中統一配置）
     const response = NextResponse.next()
-    
-    // 安全標頭
-    response.headers.set('X-Frame-Options', 'DENY')
-    response.headers.set('X-Content-Type-Options', 'nosniff')
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    response.headers.set('X-XSS-Protection', '1; mode=block')
-    
-    // CSP標頭
-    const csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://api.openai.com https://api.anthropic.com",
-      "frame-src 'self' https://www.youtube.com https://player.vimeo.com",
-    ].join('; ')
-    
-    response.headers.set('Content-Security-Policy', csp)
     
     // 添加用戶信息到請求標頭（供API使用）
     if (token) {
