@@ -83,7 +83,7 @@ export interface AgentTemplate {
   requiredIntegrations?: string[]
 }
 
-interface AIAgentState {
+export interface AIAgentState {
   agents: AIAgent[]
   conversations: AIConversation[]
   templates: AgentTemplate[]

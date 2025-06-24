@@ -10,7 +10,7 @@ export const authOptions: NextAuthOptions = {
   adapter: SupabaseAdapter({
     url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
     secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  }),
+  }) as any,
   providers: [
     // Google OAuth
     GoogleProvider({
@@ -67,7 +67,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             name: user.name,
-            image: user.avatar,
+            image: user.avatar || '',
             role: user.role,
           }
         } catch (error) {

@@ -45,7 +45,22 @@ export interface WorkflowExecution {
   }[]
 }
 
-interface WorkflowState {
+export interface WorkflowNode {
+  id: string
+  type: string
+  position: { x: number; y: number }
+  data: any
+}
+
+export interface WorkflowConnection {
+  id: string
+  source: string
+  target: string
+  sourceHandle?: string
+  targetHandle?: string
+}
+
+export interface WorkflowState {
   workflows: Workflow[]
   executions: WorkflowExecution[]
   isLoading: boolean

@@ -10,17 +10,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Server-side client for API routes
 export async function createServerClient() {
+  const cookieStore = await cookies()
   return createSupabaseServerClient(
     supabaseUrl,
     supabaseAnonKey,
     {
       cookies: {
         getAll() {
-          return cookies().getAll()
+          return cookieStore.getAll()
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            cookies().set(name, value, options)
+            cookieStore.set(name, value, options)
           })
         },
       },
@@ -28,4 +29,5 @@ export async function createServerClient() {
   )
 }
 
+export { createClient }
 export default supabase

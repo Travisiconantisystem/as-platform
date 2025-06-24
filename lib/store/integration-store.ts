@@ -36,6 +36,32 @@ export interface Integration {
   updatedAt: string
 }
 
+export interface IntegrationTemplate {
+  platform: Integration['platform']
+  name: string
+  description: string
+  icon: string
+  color: string
+  features: string[]
+  requiredFields: {
+    name: string
+    type: 'text' | 'password' | 'url' | 'select'
+    label: string
+    placeholder?: string
+    options?: { label: string; value: string }[]
+  }[]
+  webhookSupport: boolean
+  apiDocUrl?: string
+}
+
+export interface PlatformConfig {
+  apiKey?: string
+  accessToken?: string
+  refreshToken?: string
+  webhookUrl?: string
+  settings: Record<string, any>
+}
+
 export interface PlatformTemplate {
   platform: Integration['platform']
   name: string
@@ -55,7 +81,7 @@ export interface PlatformTemplate {
   apiDocUrl?: string
 }
 
-interface IntegrationState {
+export interface IntegrationState {
   integrations: Integration[]
   templates: PlatformTemplate[]
   isLoading: boolean

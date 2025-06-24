@@ -75,7 +75,7 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set, _get) => ({
         // 初始狀態
         user: null,
         workflows: [],

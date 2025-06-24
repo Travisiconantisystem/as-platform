@@ -1,19 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "name": "as-platform",
   "version": 2,
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm ci",
   "devCommand": "npm run dev",
-  "regions": ["hkg1", "sin1"],
-  "functions": {
-    "app/api/**/*.ts": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
@@ -90,7 +82,7 @@
     },
     {
       "path": "/api/cron/analytics",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }

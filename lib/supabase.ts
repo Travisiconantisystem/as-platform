@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { createClientComponentClient, createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { Database } from './database.types';
+import type { Database } from './database.types';
 
 // 環境變數檢查
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -78,8 +78,7 @@ export const TABLES = {
 
 // RLS策略輔助函數
 export const withRLS = async <T>(
-  operation: () => Promise<T>,
-  userId?: string
+  operation: () => Promise<T>
 ): Promise<T> => {
   try {
     return await operation();
@@ -91,14 +90,14 @@ export const withRLS = async <T>(
 
 // 實時訂閱輔助函數
 export const createRealtimeSubscription = (
-  table: string,
+  table: any,
   callback: (payload: any) => void,
   filter?: string
 ) => {
   const channel = supabase
     .channel(`${table}_changes`)
     .on(
-      'postgres_changes',
+      'postgres_changes' as any,
       {
         event: '*',
         schema: 'public',
@@ -158,7 +157,7 @@ export const paginatedQuery = async <T>(
 
 // 搜索輔助函數
 export const searchQuery = <T>(
-  table: string,
+  table: any,
   searchTerm: string,
   searchColumns: string[]
 ) => {
@@ -218,7 +217,7 @@ export const deleteFile = async (bucket: string, path: string) => {
 // 健康檢查函數
 export const healthCheck = async () => {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('health_check')
       .select('*')
       .limit(1);

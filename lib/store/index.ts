@@ -29,13 +29,19 @@ export type {
 
 export { useNotificationStore, createNotification } from './notification-store'
 export type { 
-  Notification, 
+  Notification,
   NotificationSettings,
   NotificationState 
 } from './notification-store'
 
 // Store 組合 Hook - 用於需要多個 store 的組件
 export const useStores = () => {
+  const { useAuthStore } = require('./auth-store')
+  const { useWorkflowStore } = require('./workflow-store')
+  const { useIntegrationStore } = require('./integration-store')
+  const { useAIAgentStore } = require('./ai-agent-store')
+  const { useNotificationStore } = require('./notification-store')
+  
   const auth = useAuthStore()
   const workflow = useWorkflowStore()
   const integration = useIntegrationStore()
@@ -108,6 +114,7 @@ export const useClearStores = () => {
 
 // 全局錯誤處理 Hook
 export const useGlobalErrorHandler = () => {
+  const { useNotificationStore } = require('./notification-store')
   const notification = useNotificationStore()
   
   const handleError = (error: Error, context?: string) => {
@@ -129,9 +136,10 @@ export const useGlobalErrorHandler = () => {
 
 // 成功操作通知 Hook
 export const useSuccessHandler = () => {
+  const { useNotificationStore } = require('./notification-store')
   const notification = useNotificationStore()
   
-  const handleSuccess = (title: string, message: string, category: Notification['category'] = 'system') => {
+  const handleSuccess = (title: string, message: string, category: 'system' | 'workflow' | 'integration' | 'ai' = 'system') => {
     notification.addNotification({
       title,
       message,

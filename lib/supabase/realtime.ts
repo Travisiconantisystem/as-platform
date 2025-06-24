@@ -1,6 +1,6 @@
-import { createClient } from './client'
-import { useEffect, useState } from 'react'
-import { RealtimeChannel } from '@supabase/supabase-js'
+import { useState, useEffect } from 'react'
+import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
+import { supabase } from './client'
 
 // 實時數據Hook
 export function useRealtimeData<T>(table: string, filter?: string) {
@@ -9,7 +9,7 @@ export function useRealtimeData<T>(table: string, filter?: string) {
   const [error, setError] = useState<string | null>(null)
   
   useEffect(() => {
-    const supabase = createClient()
+    // 使用導入的 supabase 實例
     let channel: RealtimeChannel
     
     async function setupRealtime() {
@@ -17,7 +17,10 @@ export function useRealtimeData<T>(table: string, filter?: string) {
         // 初始數據加載
         let query = supabase.from(table).select('*')
         if (filter) {
-          query = query.filter(filter.split('=')[0], 'eq', filter.split('=')[1])
+          const filterParts = filter.split('=')
+          if (filterParts.length >= 2 && filterParts[0] && filterParts[1]) {
+            query = query.filter(filterParts[0], 'eq', filterParts[1])
+          }
         }
         
         const { data: initialData, error: initialError } = await query
@@ -30,14 +33,14 @@ export function useRealtimeData<T>(table: string, filter?: string) {
         channel = supabase
           .channel(`${table}-changes`)
           .on(
-            'postgres_changes',
+            'postgres_changes' as any,
             {
               event: '*',
               schema: 'public',
               table: table,
               filter: filter
             },
-            (payload) => {
+            (payload: RealtimePostgresChangesPayload<any>) => {
               console.log('Realtime update:', payload)
               
               switch (payload.eventType) {
@@ -81,8 +84,6 @@ export function useRealtimeNotifications() {
   const [notifications, setNotifications] = useState<any[]>([])
   
   useEffect(() => {
-    const supabase = createClient()
-    
     const channel = supabase
       .channel('notifications')
       .on('broadcast', { event: '*' }, (payload) => {
@@ -113,8 +114,6 @@ export function useRealtimeSync(channelName: string) {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   
   useEffect(() => {
-    const supabase = createClient()
-    
     const channel = supabase
       .channel(channelName)
       .on('presence', { event: 'sync' }, () => {
@@ -152,8 +151,6 @@ export function useWorkflowRealtime(workflowId?: string) {
   
   useEffect(() => {
     if (!workflowId) return
-    
-    const supabase = createClient()
     
     const channel = supabase
       .channel(`workflow-${workflowId}`)
@@ -194,8 +191,6 @@ export function useAiTaskRealtime(userId?: string) {
   
   useEffect(() => {
     if (!userId) return
-    
-    const supabase = createClient()
     
     const channel = supabase
       .channel(`ai-tasks-${userId}`)
@@ -247,8 +242,6 @@ export function useSystemHealth() {
   })
   
   useEffect(() => {
-    const supabase = createClient()
-    
     const channel = supabase
       .channel('system-health')
       .on('broadcast', { event: 'health-update' }, (payload) => {
@@ -262,7 +255,7 @@ export function useSystemHealth() {
     // 定期檢查系統健康狀態
     const checkHealth = async () => {
       try {
-        const { data, error } = await supabase.from('users').select('count').limit(1)
+        const { error } = await supabase.from('users').select('count').limit(1)
         const dbStatus = error ? 'error' : 'healthy'
         
         setHealth(prev => ({
@@ -293,8 +286,6 @@ export function useSystemHealth() {
 
 // 實時數據廣播工具
 export const broadcastUpdate = async (channel: string, event: string, payload: any) => {
-  const supabase = createClient()
-  
   await supabase.channel(channel).send({
     type: 'broadcast',
     event: event,

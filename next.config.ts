@@ -1,16 +1,10 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // 輸出配置 - 使用 standalone 模式避免靜態導出問題
-  output: 'standalone',
+  // 移除 standalone 輸出模式以支持 Vercel 部署
   
   // 外部包配置
   serverExternalPackages: ['@node-rs/argon2', '@node-rs/bcrypt'],
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
-  },
   
   // 環境變量
   env: {
@@ -39,12 +33,19 @@ const nextConfig: NextConfig = {
   
   // TypeScript 配置
   typescript: {
-    ignoreBuildErrors: true, // 暫時忽略 TypeScript 錯誤
+    ignoreBuildErrors: true,
   },
   
   // ESLint 配置
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  
+  // 實驗性功能配置
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
   },
 };
 

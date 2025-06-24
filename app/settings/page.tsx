@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { copyToClipboard } from '@/lib/helpers'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -277,11 +278,6 @@ export default function SettingsPage() {
 
   const handleDeleteApiKey = (keyId: string) => {
     setApiKeys(prev => prev.filter(key => key.id !== keyId))
-  }
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    // 這裡可以添加 toast 通知
   }
 
   return (

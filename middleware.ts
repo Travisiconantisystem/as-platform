@@ -14,14 +14,7 @@ const publicRoutes = [
   '/api/webhooks',
 ]
 
-const protectedRoutes = [
-  '/dashboard',
-  '/platforms',
-  '/workflows',
-  '/ai',
-  '/settings',
-  '/profile',
-]
+
 
 const adminRoutes = [
   '/admin',
@@ -99,7 +92,7 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 
 // 檢查速率限制
 function checkRateLimit(request: NextRequest): boolean {
-  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
   const pathname = request.nextUrl.pathname
   
   // 獲取對應的速率限制配置

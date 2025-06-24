@@ -22,38 +22,47 @@ export interface N8NWebhookResponse {
 // N8N 工作流程端點配置
 const N8N_WORKFLOWS = {
   email_generation: {
+    workflowId: 'email_gen_001',
     url: `${process.env.N8N_WEBHOOK_URL}/webhook/email-generation`,
     method: 'POST'
   },
   content_analysis: {
+    workflowId: 'content_analysis_001',
     url: `${process.env.N8N_WEBHOOK_URL}/webhook/content-analysis`,
     method: 'POST'
   },
   lead_scoring: {
+    workflowId: 'lead_scoring_001',
     url: `${process.env.N8N_WEBHOOK_URL}/webhook/lead-scoring`,
     method: 'POST'
   },
   automation_suggestion: {
+    workflowId: 'automation_suggestion_001',
     url: `${process.env.N8N_WEBHOOK_URL}/webhook/automation-suggestion`,
     method: 'POST'
   },
   agent_training: {
+    workflowId: 'agent_training_001',
     url: `${process.env.N8N_WEBHOOK_URL}/webhook/agent-training`,
     method: 'POST'
   },
   agent_test: {
+    workflowId: 'agent_test_001',
     url: `${process.env.N8N_WEBHOOK_URL}/webhook/agent-test`,
     method: 'POST'
   },
   agent_chat: {
+    workflowId: 'agent_chat_001',
     url: `${process.env.N8N_WEBHOOK_URL}/webhook/agent-chat`,
     method: 'POST'
   },
   agent_config_update: {
+    workflowId: 'agent_config_update_001',
     url: `${process.env.N8N_WEBHOOK_URL}/webhook/agent-config-update`,
     method: 'POST'
   },
   agent_cleanup: {
+    workflowId: 'agent_cleanup_001',
     url: `${process.env.N8N_WEBHOOK_URL}/webhook/agent-cleanup`,
     method: 'POST'
   }
@@ -103,7 +112,7 @@ export async function sendToN8NWebhook(request: N8NWebhookRequest): Promise<N8NW
       throw new Error(`N8N Webhook 請求失敗: ${response.status} ${response.statusText}`)
     }
 
-    const result = await response.json()
+    await response.json()
     
     // 記錄到數據庫
     await logWebhookExecution({
@@ -113,7 +122,7 @@ export async function sendToN8NWebhook(request: N8NWebhookRequest): Promise<N8NW
       userId: request.userId,
       status: 'queued',
       inputData: request.data,
-      webhookUrl: workflow.webhookUrl
+      webhookUrl: workflow.url
     })
 
     return {
@@ -318,25 +327,29 @@ export async function analyzeContentPerformance(contentData: any, userId: string
 
 export async function scoreLeadQuality(leadData: any, userId: string): Promise<{ score: number; reasoning: string; executionId: string }> {
   const result = await sendToN8NWebhook({
+    workflowId: 'lead_scoring_001',
     taskType: 'lead_scoring',
-    leadData
-  }, userId)
+    data: leadData,
+    userId
+  })
   
   return {
-    score: result.data?.score || 0,
-    reasoning: result.data?.reasoning || 'No reasoning provided',
+    score: 0, // TODO: Parse from webhook response
+    reasoning: 'No reasoning provided', // TODO: Parse from webhook response
     executionId: result.executionId
   }
 }
 
 // 自動化建議函數
 export async function suggestAutomation(businessData: any, userId: string): Promise<string> {
-  const result = await sendToN8NWebhook({
+  await sendToN8NWebhook({
+    workflowId: 'automation_suggestion_001',
     taskType: 'automation_suggestion',
-    businessData
-  }, userId)
+    data: businessData,
+    userId
+  })
   
-  return result.data?.suggestions || 'No automation suggestions available'
+  return 'No automation suggestions available' // TODO: Parse from webhook response
 }
 
 // 批量處理函數

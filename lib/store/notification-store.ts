@@ -51,7 +51,7 @@ export interface NotificationSettings {
   }
 }
 
-interface NotificationState {
+export interface NotificationState {
   notifications: Notification[]
   settings: NotificationSettings
   isLoading: boolean

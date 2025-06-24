@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-interface User {
+export interface User {
   id: string
   email: string
   name?: string
@@ -11,7 +11,7 @@ interface User {
   updatedAt: string
 }
 
-interface AuthState {
+export interface AuthState {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean

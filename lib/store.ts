@@ -4,6 +4,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, Platform, Workflow, AIAgent, SystemSettings } from './types';
 import { STORAGE_KEYS } from './constants';
 
+
 // 主應用狀態
 interface AppState {
   // 用戶狀態
@@ -55,7 +56,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       // 初始狀態
       user: null,
       isAuthenticated: false,
@@ -144,58 +145,7 @@ export const useAppStore = create<AppState>()(
   )
 );
 
-// 通知狀態管理
-interface NotificationState {
-  notifications: Notification[];
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
-  removeNotification: (id: string) => void;
-  clearNotifications: () => void;
-}
-
-interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  title: string;
-  message?: string;
-  timestamp: Date;
-  duration?: number;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
-}
-
-export const useNotificationStore = create<NotificationState>((set) => ({
-  notifications: [],
-  
-  addNotification: (notification) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const newNotification: Notification = {
-      ...notification,
-      id,
-      timestamp: new Date()
-    };
-    
-    set((state) => ({
-      notifications: [...state.notifications, newNotification]
-    }));
-    
-    // 自動移除通知
-    if (notification.duration !== 0) {
-      setTimeout(() => {
-        set((state) => ({
-          notifications: state.notifications.filter(n => n.id !== id)
-        }));
-      }, notification.duration || 5000);
-    }
-  },
-  
-  removeNotification: (id) => set((state) => ({
-    notifications: state.notifications.filter(n => n.id !== id)
-  })),
-  
-  clearNotifications: () => set({ notifications: [] })
-}));
+// 通知狀態管理已移至 ./store/notification-store
 
 // 模態框狀態管理
 interface ModalState {
@@ -290,54 +240,86 @@ export const useFormStore = create<FormState>((set, get) => ({
     }
   })),
   
-  updateField: (formId, field, value) => set((state) => ({
-    forms: {
-      ...state.forms,
-      [formId]: {
-        ...state.forms[formId],
-        data: {
-          ...state.forms[formId]?.data,
-          [field]: value
+  updateField: (formId, field, value) => set((state) => {
+    const existingForm = state.forms[formId] || {
+      data: {},
+      errors: {},
+      touched: {},
+      isSubmitting: false
+    };
+    return {
+      forms: {
+        ...state.forms,
+        [formId]: {
+          ...existingForm,
+          data: {
+            ...existingForm.data,
+            [field]: value
+          }
         }
       }
-    }
-  })),
-  
-  setFieldError: (formId, field, error) => set((state) => ({
-    forms: {
-      ...state.forms,
-      [formId]: {
-        ...state.forms[formId],
-        errors: {
-          ...state.forms[formId]?.errors,
-          [field]: error
+    };
+  }),
+
+  setFieldError: (formId, field, error) => set((state) => {
+    const existingForm = state.forms[formId] || {
+      data: {},
+      errors: {},
+      touched: {},
+      isSubmitting: false
+    };
+    return {
+      forms: {
+        ...state.forms,
+        [formId]: {
+          ...existingForm,
+          errors: {
+            ...existingForm.errors,
+            [field]: error
+          }
         }
       }
-    }
-  })),
-  
-  setFieldTouched: (formId, field, touched) => set((state) => ({
-    forms: {
-      ...state.forms,
-      [formId]: {
-        ...state.forms[formId],
-        touched: {
-          ...state.forms[formId]?.touched,
-          [field]: touched
+    };
+  }),
+
+  setFieldTouched: (formId, field, touched) => set((state) => {
+    const existingForm = state.forms[formId] || {
+      data: {},
+      errors: {},
+      touched: {},
+      isSubmitting: false
+    };
+    return {
+      forms: {
+        ...state.forms,
+        [formId]: {
+          ...existingForm,
+          touched: {
+            ...existingForm.touched,
+            [field]: touched
+          }
         }
       }
-    }
-  })),
-  
-  setSubmitting: (formId, isSubmitting) => set((state) => ({
-    forms: {
-      ...state.forms,
-      [formId]: {
-        ...state.forms[formId],
-        isSubmitting
+    };
+  }),
+
+  setSubmitting: (formId, isSubmitting) => set((state) => {
+    const existingForm = state.forms[formId] || {
+      data: {},
+      errors: {},
+      touched: {},
+      isSubmitting: false
+    };
+    return {
+      forms: {
+        ...state.forms,
+        [formId]: {
+          ...existingForm,
+          isSubmitting
+        }
       }
-    }
-  })),
+    };
+  }),
   
   resetForm: (formId) => set((state) => ({
     forms: {
